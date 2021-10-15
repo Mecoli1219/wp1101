@@ -122,7 +122,7 @@ const showNumber = () =>{
 
 const changePhoto = () => {
     photo_list.innerHTML = ""
-    if (state.album !== "empty"){
+    if (state.album !== "all"){
         var liNode = document.createElement("li")
         liNode.className = "photo-item-add"
         liNode.id = "photo-item-add"
@@ -151,9 +151,14 @@ const changePhoto = () => {
         liNode.appendChild(imgNode)
         photo_list.appendChild(liNode)
     })
+    photo_src.all = []
+    albums.map((album)=>{
+        photo_src.all = [...photo_src.all, ...photo_src[album]]
+    })
     changeLargePhoto(undefined)
     listenPhoto()
     showNumber()
+    changeAlbumNumber("all")
 }
 
 const changeLargePhoto = (event)=>{
@@ -199,22 +204,26 @@ const addAlbum = ()=>{
 }
 
 const deletePhoto = () =>{ 
-    if(state.can_delete){
-        if(state.on_album){
-            const {current_album} = state
-            const delete_album = albums[current_album-1]
-            albums.splice(current_album-1, 1)
-            delete photo_src[delete_album]
-            state.album = albums[0]
-            listAlbum()
-            highlightAlbum()
-        }else{
-            const {current_photo, album} = state
-            state.total_photo -= 1
-            photo_src[album].splice(current_photo-1, 1)
-            changePhoto()
-            changeAlbumNumber(album)
+    if(state.album !== "all"){
+        if(state.can_delete){
+            if(state.on_album){
+                const {current_album} = state
+                const delete_album = albums[current_album-1]
+                albums.splice(current_album-1, 1)
+                delete photo_src[delete_album]
+                state.album = albums[0]
+                listAlbum()
+                highlightAlbum()
+            }else{
+                const {current_photo, album} = state
+                state.total_photo -= 1
+                photo_src[album].splice(current_photo-1, 1)
+                changePhoto()
+                changeAlbumNumber(album)
+            }
         }
+    }else{
+        alert("You can't delete anything from ALL album, including album itself!")
     }
 }
 
@@ -223,8 +232,10 @@ function listenPhoto(){
     Array.from(elements).forEach(function(element) {
         element.addEventListener('click', changeLargePhoto);
     });
-    const element = document.getElementById("add-photo-button")
-    element.addEventListener('click', addPhoto)
+    if(state.album !== "all"){
+        const element = document.getElementById("add-photo-button")
+        element.addEventListener('click', addPhoto)
+    }
 }
 
 function listenAlbum(){
