@@ -33,18 +33,30 @@ var albums = ["all", "memes", "animals", "empty"]
 
 var state = {
     album:"all",
-    select: "https://as1.ftcdn.net/v2/jpg/03/12/26/06/1000_F_312260680_EVMXPzgpDj0F5FVoiJUbQ1axYmS5JArN.jpg"
+    select: [
+        0,
+        0
+    ],
+    total_photo:0,
+    current_photo:0,
+    total_album:0,
+    current_album: 1,
+    on_album: false,
+    can_delete : false
 }
 
 function changeAlbum(value){
-    return () => {
-        if(photo_src[value].length === 0){
+    return (event) => {
+        if(photo_src[value].length === 0 && value === "empty"){
             alert("This album is empty!")
             return
         }
+        state.current_album = event.currentTarget.number
         state.album = value
         highlightAlbum()
         changePhoto()
+        state.on_album = true
+        state.can_delete = true
     }
 }
 
@@ -63,19 +75,49 @@ const highlightAlbum = () =>{
 
 const listAlbum = () =>{
     album_list.innerHTML = ""
+    state.total_album = 0
     albums.map((album)=>{
+        state.total_album += 1
         var liNode = document.createElement("li")
         liNode.className = "album-item"
         liNode.id = `album-item-${album}`
         var aNode = document.createElement("a")
         aNode.className = "album-bottom"
         aNode.id = `album-bottom-${album}`
+        aNode.number = state.total_album
         var h2Node = document.createElement("h2")
-        h2Node.innerText = album.toUpperCase()
+        h2Node.id = `album-text-${album}`
+        h2Node.innerText = album.toUpperCase()+`(${photo_src[album].length})`
         aNode.appendChild(h2Node)
         liNode.appendChild(aNode)
         album_list.appendChild(liNode)
     })
+    var liNode = document.createElement("li")
+    liNode.className = "add-album-item"
+    liNode.number = state.total_album
+    liNode.id = `add-album-item`
+    var inputNode = document.createElement("input")
+    inputNode.placeholder = "Enter Album Name"
+    inputNode.type = "text"
+    inputNode.id = "add-album"
+    liNode.appendChild(inputNode)
+    inputNode = document.createElement("input")
+    inputNode.type = "submit"
+    inputNode.id = "add-album-button"
+    liNode.appendChild(inputNode)
+    album_list.appendChild(liNode)
+    listenAlbum()
+    changePhoto()
+}
+
+const changeAlbumNumber = (album) =>{
+    const h2Node = document.getElementById(`album-text-${album}`)
+    h2Node.innerText = album.toUpperCase()+`(${photo_src[album].length})`
+}
+
+const showNumber = () =>{
+    const numberNode = document.getElementById("number")
+    numberNode.innerText = `${state.current_photo}/${state.total_photo}`
 }
 
 const changePhoto = () => {
@@ -97,9 +139,12 @@ const changePhoto = () => {
         liNode.style.backgroundColor = "rgba(0,0,0,0)"
         photo_list.appendChild(liNode)
     }
+    state.total_photo = 0
     photo_src[state.album].map((url)=>{
+        state.total_photo += 1
         var liNode = document.createElement("li")
         liNode.className = "photo-item"
+        liNode.number = state.total_photo
         var imgNode = document.createElement("img")
         imgNode.src = url
         imgNode.alt = "photo"
@@ -108,23 +153,32 @@ const changePhoto = () => {
     })
     changeLargePhoto(undefined)
     listenPhoto()
+    showNumber()
 }
 
 const changeLargePhoto = (event)=>{
     const elements = document.getElementsByClassName("photo-item")
+    const large_photo = document.getElementById("large-photo")
     Array.from(elements).forEach(function(element) {
         element.style.borderColor="black"
     });
     if(event===undefined){
-        state.select = elements[0].children[0].src
-        elements[0].style.borderColor="red"
+        if (elements[0] !== undefined){
+            large_photo.src = elements[0].children[0].src
+            elements[0].style.borderColor="red"
+            state.current_photo = 1
+        }else{
+            large_photo.src = "./photos/question.png"
+            state.current_photo = 0
+        }
     }else{
-        state.select = event.target.src || event.target.children[0].src
+        large_photo.src = event.target.src || event.target.children[0].src
         event.currentTarget.style.borderColor="red"
+        state.current_photo = event.currentTarget.number
     }
-    
-    const large_photo = document.getElementById("large-photo")
-    large_photo.src = state.select
+    showNumber()
+    state.on_album=false
+    state.can_delete = true
 }
 
 const addPhoto = ()=>{
@@ -132,8 +186,36 @@ const addPhoto = ()=>{
     const {album} = state
     url = element.value
     photo_src[album] = [url, ...photo_src[album]]
-    changePhoto()
-    
+    changePhoto()   
+    changeAlbumNumber(album)
+}
+
+const addAlbum = ()=>{
+    const element = document.getElementById("add-album")
+    url = element.value
+    photo_src[url] = []
+    albums = [...albums, url]
+    listAlbum()   
+}
+
+const deletePhoto = () =>{ 
+    if(state.can_delete){
+        if(state.on_album){
+            const {current_album} = state
+            const delete_album = albums[current_album-1]
+            albums.splice(current_album-1, 1)
+            delete photo_src[delete_album]
+            state.album = albums[0]
+            listAlbum()
+            highlightAlbum()
+        }else{
+            const {current_photo, album} = state
+            state.total_photo -= 1
+            photo_src[album].splice(current_photo-1, 1)
+            changePhoto()
+            changeAlbumNumber(album)
+        }
+    }
 }
 
 function listenPhoto(){
@@ -149,13 +231,20 @@ function listenAlbum(){
     albums.map((album)=>{
         document.getElementById(`album-bottom-${album}`).addEventListener("click", changeAlbum(album))
     })
+    const element = document.getElementById("add-album-button")
+    element.addEventListener('click', addAlbum)
 }
+
+window.addEventListener('keydown', function (e) {
+  if(e.key == "Backspace" || e.key == "Delete"){
+    deletePhoto()
+  }
+}, false);
 
 listAlbum()
 highlightAlbum()
 changePhoto()
 listenPhoto()
-listenAlbum()
 
         
 
