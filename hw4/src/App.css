@@ -1,0 +1,17 @@
+input[type='checkbox'] {
+    visibility: hidden;
+}
+
+.todo-item-input {
+    font-size: 1.5em;
+    font-weight: 300;
+    overflow-wrap: break-word;
+    width: 80%;
+    min-height: 3em;
+    transition: opacity 0.3s;
+    border: none;
+}
+
+.todo-item-input:focus {
+    outline: none;
+}
