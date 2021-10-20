@@ -46,6 +46,10 @@ export default class Section extends Component {
 
     render() {
         const {todos, status} = this.props
+        const ul_style = {display:"none"}
+        if (todos.length !== 0){
+            ul_style.display = "block"
+        }
         var filtered = []
         if (status === "all"){
             filtered = todos
@@ -60,9 +64,9 @@ export default class Section extends Component {
         }
 
         return (
-            <section className="todo-app__main">
+            <section className="todo-app__main" >
                 <input type="text" className="todo-app__input" id="todo-input" placeholder="What needs to be done?" onKeyUp={this.handleKeyUp}/>
-                <ul className="todo-app__list" id="todo-list">
+                <ul className="todo-app__list" id="todo-list" style={ul_style}>
                     {
                         filtered.map((todo)=>{
                             return <Item todo={todo} key={todo.id} updateTodo={this.updateTodo} deleteTodo={this.deleteTodo} />
