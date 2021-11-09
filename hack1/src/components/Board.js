@@ -121,7 +121,9 @@ const Board = ({ boardSize, mineNum, backToHome }) => {
             {/* Useful Hint: The board is composed of BOARDSIZE*BOARDSIZE of Cell (2-dimention). So, nested 'map' is needed to implement the board.  */}
             {/* Reminder: Remember to use the component <Cell> and <Dashboard>. See Cell.js and Dashboard.js for detailed information. */}
             <div className = "boardWrapper">
-                {/* <Modal restartGame={restartGame} backToHome={backToHome} win={win} /> */}
+                {
+                    win || gameOver ? <Modal restartGame={restartGame} backToHome={backToHome} win={win}/>:<></>
+                }
                 <div className = "boardContainer">
                     <Dashboard remainFlagNum={remainFlagNum} gameOver={gameOver} />
                     {
